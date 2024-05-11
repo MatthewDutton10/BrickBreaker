@@ -1,5 +1,5 @@
 # Example file showing a circle moving on screen
-import pygame
+import pygame, random
 from pygame import Rect
 
 # DOCS: https://www.pygame.org/docs/
@@ -13,14 +13,23 @@ dt = 0
 
 player_pos = pygame.Vector2(screen.get_width() / 2, screen.get_height() * 0.80)
 
-horiMove = 0
-verMove = 0
-upOrDownPressed = False
-leftOrRightPressed = False
-
+playerVelocity = 0
 player = Rect(player_pos, (100, 25))
+player.x -= player.width / 2
 
-speed = 25
+ballX = screen.get_width() / 2
+ballY = screen.get_height() * 0.5
+
+ballDown = True
+ballRight = True
+
+playerSpeed = 25
+ballGravity = 200
+ballHoriSpeed = random.randint(50,250)
+ballMovingRight = False
+if random.randint(0,1) == 0:
+    ballMovingRight = True
+ballRadius = 10
 
 windowSize = pygame.display.get_window_size()
 
@@ -39,32 +48,53 @@ while running:
     keys = pygame.key.get_pressed()
     
     # Moving Left
-    if keys[pygame.K_a] and horiMove > 0:
-        horiMove = -1 * speed * dt
+    if keys[pygame.K_a] and playerVelocity > 0:
+        playerVelocity = -1 * playerSpeed * dt
     elif keys[pygame.K_a]:
-        horiMove -= speed * dt
+        playerVelocity -= playerSpeed * dt
 
     # Moving right
-    if keys[pygame.K_d] and horiMove < 0:
-        horiMove = speed * dt
+    if keys[pygame.K_d] and playerVelocity < 0:
+        playerVelocity = playerSpeed * dt
     elif keys[pygame.K_d]:
-        horiMove += speed * dt
+        playerVelocity += playerSpeed * dt
 
     # Left and Right
     if keys[pygame.K_a] and keys[pygame.K_d]:
-        horiMove = 0
+        playerVelocity = 0
 
     # Hard stop
     if not (keys[pygame.K_a] or keys[pygame.K_d]):
-        horiMove = 0
+        playerVelocity = 0
 
-    player = player.move(horiMove, verMove)
+    player = player.move(playerVelocity, 0)
+    player.x = min(player.x, windowSize[0] - player.width)
+    player.x = max(player.x, 0)
+
+    # Ball vertical movement
+    if ballDown:
+        ballY += ballGravity * dt
+    else:
+        ballY -= ballGravity * dt
+
+    # Ball horizontal movement
+    if (ballMovingRight):
+        ballX += ballHoriSpeed * dt
+    else:
+        ballX -= ballHoriSpeed * dt
 
 
-    player.x = min(player.x, windowSize[0] - 50)
-    player.x = max(player.x, 0) # left 
+    # Ball bounces off walls
+    if (ballX >= windowSize[0] - ballRadius):
+        ballX = windowSize[0] - ballRadius
+        ballMovingRight = not ballMovingRight
+    elif (ballX <= 0 + ballRadius):
+        ballX = 0 + ballRadius
+        ballMovingRight = not ballMovingRight 
+
 
     pygame.draw.rect(screen, "green", player, 40) 
+    pygame.draw.circle(screen, "white", pygame.Vector2(ballX, ballY), ballRadius)
 
     # flip() the display to put your work on screen
     pygame.display.flip()
