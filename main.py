@@ -13,9 +13,10 @@ dt = 0
 
 playerHeight = screen.get_height() * 0.80
 player_pos = pygame.Vector2(screen.get_width() / 2, playerHeight)
+brick_pos = pygame.Vector2(screen.get_width() / 2, 20)
 
 playerVelocity = 0
-player = Rect(player_pos, (100, 25))
+player = Rect(player_pos, (screen.get_width() / 10, 25))
 player.x -= player.width / 2
 
 ballX = screen.get_width() / 2
@@ -36,6 +37,14 @@ windowSize = pygame.display.get_window_size()
 
 pygame.display.set_caption("BrickBreaker")
 collideTimeout = 5
+
+bricks = []
+for i in range(0,10):
+    for j in range(0,5):
+        bricks.append(Rect(pygame.Vector2((screen.get_width() / 10) * i, 20 * j), ((screen.get_width() / 10), 25)))
+
+
+brickColors = {0:"orange", 1:"pink", 2:"red", 3:"green", 4:"purple", 5:"brown", 6:"yellow", 7:"orange", 8:"pink", 9:"red", 10:"green"}
 
 while running:
     # poll for events
@@ -103,6 +112,16 @@ while running:
     
     drawnPlayer = pygame.draw.rect(screen, "green", player, 40) 
     drawnBall = pygame.draw.circle(screen, "white", pygame.Vector2(ballX, ballY), ballRadius)
+
+    drawnBricks = []
+    x=0
+    for brick in bricks:
+        drawnBricks.append(pygame.draw.rect(screen, brickColors[x % 10], brick, 40))
+        if (pygame.Rect.colliderect(drawnBricks[x], drawnBall)):
+            ballGravity *= -1
+            # TODO DELETE BRICK
+        x+=1
+
 
 
     if (pygame.Rect.colliderect(drawnPlayer, drawnBall) # do ball and player collide
