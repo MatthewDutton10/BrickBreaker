@@ -26,7 +26,8 @@ ballDown = True
 ballRight = True
 
 playerSpeed = 25
-ballGravity = 200
+ballGravity = 300
+ballMaxHoriSpeed = 500
 ballHoriSpeed = random.randint(50,250)
 ballMovingRight = False
 if random.randint(0,1) == 0:
@@ -82,26 +83,17 @@ while running:
     player.x = min(player.x, windowSize[0] - player.width)
     player.x = max(player.x, 0)
 
-    # Ball vertical movement
-    if ballDown:
-        ballY += ballGravity * dt
-    else:
-        ballY -= ballGravity * dt
+    # Ball movement
+    ballY += ballGravity * dt
+    ballX += ballHoriSpeed * dt
 
-
-    # Ball horizontal movement
-    if (ballMovingRight):
-        ballX += ballHoriSpeed * dt
-    else:
-        ballX -= ballHoriSpeed * dt
-
-    # Ball bounces off walls
-    if (ballX >= windowSize[0] - ballRadius):
+    # Ball bounces off walls & ceiling
+    if (ballX > windowSize[0] - ballRadius):
         ballX = windowSize[0] - ballRadius
-        ballMovingRight = not ballMovingRight
-    elif (ballX <= 0 + ballRadius):
+        ballHoriSpeed *= -1
+    elif (ballX < 0 + ballRadius):
         ballX = 0 + ballRadius
-        ballMovingRight = not ballMovingRight 
+        ballHoriSpeed *= -1
     if (ballY <= 0 + ballRadius):
         ballY = 0 + ballRadius
         ballGravity *= -1
@@ -127,6 +119,11 @@ while running:
     if (pygame.Rect.colliderect(drawnPlayer, drawnBall) # do ball and player collide
         and ballY <= playerHeight + 5 # ignore collisions with the side of the rectangle with some tolerance
         and collideTimeout == 0): # add timeout to prevent spamming direction changes
+        horiDir = 1
+        if drawnBall.x <= (drawnPlayer.x + (drawnPlayer.width/2)):
+            horiDir = -1
+        ballHoriSpeed = horiDir * abs((drawnBall.x - (drawnPlayer.x + (drawnPlayer.width/2)))/(drawnPlayer.width)) * ballMaxHoriSpeed
+        
         ballGravity *= -1
         collideTimeout = 5
     elif collideTimeout > 0:
