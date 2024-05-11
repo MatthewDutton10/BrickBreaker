@@ -11,7 +11,8 @@ clock = pygame.time.Clock()
 running = True
 dt = 0
 
-player_pos = pygame.Vector2(screen.get_width() / 2, screen.get_height() * 0.80)
+playerHeight = screen.get_height() * 0.80
+player_pos = pygame.Vector2(screen.get_width() / 2, playerHeight)
 
 playerVelocity = 0
 player = Rect(player_pos, (100, 25))
@@ -34,6 +35,7 @@ ballRadius = 10
 windowSize = pygame.display.get_window_size()
 
 pygame.display.set_caption("BrickBreaker")
+collideTimeout = 5
 
 while running:
     # poll for events
@@ -77,12 +79,12 @@ while running:
     else:
         ballY -= ballGravity * dt
 
+
     # Ball horizontal movement
     if (ballMovingRight):
         ballX += ballHoriSpeed * dt
     else:
         ballX -= ballHoriSpeed * dt
-
 
     # Ball bounces off walls
     if (ballX >= windowSize[0] - ballRadius):
@@ -91,10 +93,25 @@ while running:
     elif (ballX <= 0 + ballRadius):
         ballX = 0 + ballRadius
         ballMovingRight = not ballMovingRight 
+    if (ballY <= 0 + ballRadius):
+        ballY = 0 + ballRadius
+        ballGravity *= -1
 
 
-    pygame.draw.rect(screen, "green", player, 40) 
-    pygame.draw.circle(screen, "white", pygame.Vector2(ballX, ballY), ballRadius)
+    pygame.Rect.colliderect(pygame.draw.rect(screen, "green", player, 40),
+                            pygame.draw.circle(screen, "white", pygame.Vector2(ballX, ballY), ballRadius))
+    
+    drawnPlayer = pygame.draw.rect(screen, "green", player, 40) 
+    drawnBall = pygame.draw.circle(screen, "white", pygame.Vector2(ballX, ballY), ballRadius)
+
+
+    if (pygame.Rect.colliderect(drawnPlayer, drawnBall) # do ball and player collide
+        and ballY <= playerHeight + 5 # ignore collisions with the side of the rectangle with some tolerance
+        and collideTimeout == 0): # add timeout to prevent spamming direction changes
+        ballGravity *= -1
+        collideTimeout = 5
+    elif collideTimeout > 0:
+        collideTimeout -= 1
 
     # flip() the display to put your work on screen
     pygame.display.flip()
