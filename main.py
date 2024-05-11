@@ -1,5 +1,6 @@
 # Example file showing a circle moving on screen
 import pygame
+from pygame import Rect
 
 # DOCS: https://www.pygame.org/docs/
 
@@ -10,7 +11,20 @@ clock = pygame.time.Clock()
 running = True
 dt = 0
 
-player_pos = pygame.Vector2(screen.get_width() / 2, screen.get_height() / 2)
+player_pos = pygame.Vector2(screen.get_width() / 2, screen.get_height() * 0.80)
+
+horiMove = 0
+verMove = 0
+upOrDownPressed = False
+leftOrRightPressed = False
+
+player = Rect(player_pos, (100, 25))
+
+speed = 25
+
+windowSize = pygame.display.get_window_size()
+
+pygame.display.set_caption("BrickBreaker")
 
 while running:
     # poll for events
@@ -20,19 +34,37 @@ while running:
             running = False
 
     # fill the screen with a color to wipe away anything from last frame
-    screen.fill("purple")
-
-    pygame.draw.circle(screen, "red", player_pos, 40)
+    screen.fill("black")
 
     keys = pygame.key.get_pressed()
-    if keys[pygame.K_w]:
-        player_pos.y -= 300 * dt
-    if keys[pygame.K_s]:
-        player_pos.y += 300 * dt
-    if keys[pygame.K_a]:
-        player_pos.x -= 300 * dt
-    if keys[pygame.K_d]:
-        player_pos.x += 300 * dt
+    
+    # Moving Left
+    if keys[pygame.K_a] and horiMove > 0:
+        horiMove = -1 * speed * dt
+    elif keys[pygame.K_a]:
+        horiMove -= speed * dt
+
+    # Moving right
+    if keys[pygame.K_d] and horiMove < 0:
+        horiMove = speed * dt
+    elif keys[pygame.K_d]:
+        horiMove += speed * dt
+
+    # Left and Right
+    if keys[pygame.K_a] and keys[pygame.K_d]:
+        horiMove = 0
+
+    # Hard stop
+    if not (keys[pygame.K_a] or keys[pygame.K_d]):
+        horiMove = 0
+
+    player = player.move(horiMove, verMove)
+
+
+    player.x = min(player.x, windowSize[0] - 50)
+    player.x = max(player.x, 0) # left 
+
+    pygame.draw.rect(screen, "green", player, 40) 
 
     # flip() the display to put your work on screen
     pygame.display.flip()
