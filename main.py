@@ -73,6 +73,12 @@ while running:
 
     keys = pygame.key.get_pressed()
 
+    if (keys[pygame.K_ESCAPE] and not inGame):
+        running = False
+        continue
+    elif keys[pygame.K_ESCAPE]:
+        # TODO pause
+
     if (keys[pygame.K_TAB] or inGame):
         inGame = True
 
@@ -134,28 +140,34 @@ while running:
             touchedPlayer = False
             scoreMultiplier = 0
     elif lives == 0:
-        text = font.render("Game over :(", True, "red")
-        textpos = text.get_rect(centerx=screen.get_width() / 2, y=200)
-        screen.blit(text, textpos)
+        gameOverText = font.render("Game over :(", True, "red")
+        textpos = gameOverText.get_rect(centerx=screen.get_width() / 2, y=150)
+        screen.blit(gameOverText, textpos)
         finalScoreText = font.render("Final Score: " + str(score), True, "red")
-        finalScorePos = text.get_rect(centerx=screen.get_width() / 2, y=250)
+        finalScorePos = finalScoreText.get_rect(centerx=screen.get_width() / 2, y=200)
         screen.blit(finalScoreText, finalScorePos)
         newGameText = font.render("Press 'tab' to start a new game", True, "red")
-        newGamePos = text.get_rect(centerx=screen.get_width() / 2, y=300)
+        newGamePos = newGameText.get_rect(centerx=screen.get_width() / 2, y=250)
         screen.blit(newGameText, newGamePos)
+        quitText = font.render("Press 'Esc' to quit", True, "red")
+        quitTextPos = quitText.get_rect(centerx=screen.get_width() / 2, y=300)
+        screen.blit(quitText, quitTextPos)
 
     elif pygame.font:
         if lives == 3:
-            text = font.render("Welcome to BrickBreaker!", True, "red")
+            textLine1 = font.render("Welcome to BrickBreaker!", True, "red")
             textLine2 = font.render("Press 'tab' to start", True, "red")
         else:
-            text = font.render("You died :(", True, "red")
+            textLine1 = font.render("You died :(", True, "red")
             textLine2 = font.render("Press 'tab' to try again", True, "red")
-        textpos = text.get_rect(centerx=screen.get_width() / 2, y=200)
-        screen.blit(text, textpos)
-        
-        textpos = text.get_rect(centerx=screen.get_width() / 2, y=250)
-        screen.blit(textLine2, textpos)
+        textLine3 = font.render("Press 'Esc' to quit", True, "red")
+
+        textpos2 = textLine1.get_rect(centerx=screen.get_width() / 2, y=200)
+        screen.blit(textLine1, textpos2)
+        textpos3 = textLine2.get_rect(centerx=screen.get_width() / 2, y=250)
+        screen.blit(textLine2, textpos3)
+        textpos4 = textLine3.get_rect(centerx=screen.get_width() / 2, y=300)
+        screen.blit(textLine3, textpos4)
 
 
         
@@ -201,12 +213,12 @@ while running:
         playerCollideTimeout -= 1
 
     
-    scoreText = font.render("Score: " + str(score), True, "red") # + " " + comboText
-    scoreTextpos = text.get_rect(centerx=screen.get_width() / 4, y=screen.get_height() - 50)
+    scoreText = font.render("Score: " + str(score) + " " + comboText, True, "red")
+    scoreTextpos = scoreText.get_rect(centerx=screen.get_width() / 4, y=screen.get_height() - 50)
     screen.blit(scoreText, scoreTextpos)
 
     livesText = font.render("Lives: " + str(lives), True, "red")
-    livesTextPos = text.get_rect(centerx=3 * screen.get_width() / 4, y=screen.get_height() - 50)
+    livesTextPos = livesText.get_rect(centerx=3 * screen.get_width() / 4, y=screen.get_height() - 50)
     screen.blit(livesText, livesTextPos)
 
     # flip() the display to put your work on screen
