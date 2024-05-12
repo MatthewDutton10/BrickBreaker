@@ -2,6 +2,8 @@
 import pygame, random
 from pygame import Rect
 
+from helper import *
+
 # DOCS: https://www.pygame.org/docs/
 
 # pygame setup
@@ -39,15 +41,13 @@ pygame.display.set_caption("BrickBreaker")
 playerCollideTimeout = 0
 brickCollideTimeout = 0
 
-bricks = []
-for i in range(0,10):
-    for j in range(0,5):
-        bricks.append(Rect(pygame.Vector2((screen.get_width() / 10) * i, 20 * j), ((screen.get_width() / 10), 25)))
+bricks = initializeBricks(screen)
         
 
 id=0
 brickID = {}
-colors = ["orange", "pink", "red", "green", "purple", "brown", "yellow", "orange", "pink", "red", "green"]
+colors = ["orange", "pink", "red", "green", "purple", "brown", "yellow"]
+random.shuffle(colors)
 for brick in bricks:
     brickID[id] = brick
     id+=1
@@ -68,6 +68,11 @@ pauseTimer = 0
 
 if pygame.font:
     font = pygame.font.Font(None, 64)
+
+levelComplete = False
+level = 1
+
+combo = 0
 
 while running:
     # poll for events
@@ -95,15 +100,14 @@ while running:
 
     if (keys[pygame.K_TAB] or (inGame and not paused)):
         inGame = True
+        levelComplete = False
 
         # new game after a game over
         if (lives == 0):
             score = 0
             lives = NUM_LIVES
-            bricks = []
-            for i in range(0,10):
-                for j in range(0,5):
-                    bricks.append(Rect(pygame.Vector2((screen.get_width() / 10) * i, 20 * j), ((screen.get_width() / 10), 25)))
+            bricks = initializeBricks(screen)
+            random.shuffle(colors)
     
         # Moving Left
         if (keys[pygame.K_a] or keys[pygame.K_LEFT]) and playerVelocity > 0:
@@ -147,12 +151,12 @@ while running:
         elif (ballY >= windowSize[1] - ballRadius):
             lives-=1
             inGame=False
-            player.x = (screen.get_width() / 2) - player.width / 2
-            ballX = screen.get_width() / 2
-            ballY = screen.get_height() * 0.5
+            player.x = resetPlayer(player, screen)
+            ballX, ballY = resetBall(screen)
             comboText = ""
             touchedPlayer = False
             scoreMultiplier = 0
+            combo = 0
     elif lives == 0:
         gameOverText = font.render("Game over :(", True, "red")
         textpos = gameOverText.get_rect(centerx=screen.get_width() / 2, y=150)
@@ -168,7 +172,10 @@ while running:
         screen.blit(quitText, quitTextPos)
 
     elif pygame.font and not paused:
-        if lives == NUM_LIVES:
+        if levelComplete:
+            textLine1 = font.render("Level " + str(level-1) + " Complete!", True, "red")
+            textLine2 = font.render("Press 'tab' to start next level", True, "red")
+        elif lives == NUM_LIVES:
             textLine1 = font.render("Welcome to BrickBreaker!", True, "red")
             textLine2 = font.render("Press 'tab' to start", True, "red")
         else:
@@ -200,27 +207,42 @@ while running:
     removeBrickIDs = []
     x=0
     for brick in bricks:
-        currentBrickID = list(brickID.keys())[list(brickID.values()).index(brick)]
+        currentBrickID = getBrickID(brick, brickID)
         drawnBricks.append(pygame.draw.rect(screen, colors[currentBrickID % len(colors)], brick, 40))
         if (pygame.Rect.colliderect(drawnBricks[x], drawnBall)
             and brickCollideTimeout == 0):
             ballGravity *= -1
             removeBrickIDs.insert(0, currentBrickID)
+            combo += scoreMultiplier*MULTIPLIER_VAL
+            scoreMultiplier+=1
+            score+=BRICK_VAL
+            brickCollideTimeout = 5
             if (touchedPlayer):
-                score+=BRICK_VAL
-                scoreMultiplier+=1
+                score += combo
                 comboText = ""
             else:
-                score += BRICK_VAL + (scoreMultiplier * MULTIPLIER_VAL)
-                scoreMultiplier+=1
                 comboText = "+ Combo x" + str(scoreMultiplier)
             touchedPlayer = False
-            brickCollideTimeout = 5
         x+=1
 
     # remove collided bricks
     for removeID in removeBrickIDs:
         bricks.remove(brickID[removeID])
+    
+    if (not bricks):
+        inGame = False
+        levelComplete = True
+        drawnBricks = []
+        bricks = initializeBricks(screen)
+        level+=1
+        scoreMultiplier=0
+        random.shuffle(colors)
+        player.x = resetPlayer(player, screen)
+        ballX, ballY = resetBall(screen)
+        for brick in bricks:
+            currentBrickID = getBrickID(brick, brickID)
+            drawnBricks.append(pygame.draw.rect(screen, colors[currentBrickID % len(colors)], brick, 40))
+
 
     if (brickCollideTimeout > 0):
         brickCollideTimeout -= 1
@@ -236,12 +258,12 @@ while running:
         ballGravity *= -1
         playerCollideTimeout = 5
         touchedPlayer = True
+        score += combo
+        combo = 0
         scoreMultiplier = 0
         comboText = ""
     elif playerCollideTimeout > 0:
         playerCollideTimeout -= 1
-        continue
-
     
     scoreText = font.render("Score: " + str(score) + " " + comboText, True, "red")
     scoreTextpos = scoreText.get_rect(centerx=screen.get_width() / 4, y=screen.get_height() - 50)
