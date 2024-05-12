@@ -37,7 +37,8 @@ ballRadius = 10
 windowSize = pygame.display.get_window_size()
 
 pygame.display.set_caption("BrickBreaker")
-collideTimeout = 5
+playerCollideTimeout = 0
+brickCollideTimeout = 0
 
 bricks = []
 for i in range(0,10):
@@ -46,6 +47,8 @@ for i in range(0,10):
 
 
 brickColors = {0:"orange", 1:"pink", 2:"red", 3:"green", 4:"purple", 5:"brown", 6:"yellow", 7:"orange", 8:"pink", 9:"red", 10:"green"}
+
+inGame = False
 
 while running:
     # poll for events
@@ -58,50 +61,51 @@ while running:
     screen.fill("black")
 
     keys = pygame.key.get_pressed()
+
+    if (keys[pygame.K_TAB] or inGame):
+        inGame = True
     
-    # Moving Left
-    if keys[pygame.K_a] and playerVelocity > 0:
-        playerVelocity = -1 * playerSpeed * dt
-    elif keys[pygame.K_a]:
-        playerVelocity -= playerSpeed * dt
+        # Moving Left
+        if (keys[pygame.K_a] or keys[pygame.K_LEFT]) and playerVelocity > 0:
+            playerVelocity = -1 * playerSpeed * dt
+        elif (keys[pygame.K_a] or keys[pygame.K_LEFT]):
+            playerVelocity -= playerSpeed * dt
 
-    # Moving right
-    if keys[pygame.K_d] and playerVelocity < 0:
-        playerVelocity = playerSpeed * dt
-    elif keys[pygame.K_d]:
-        playerVelocity += playerSpeed * dt
+        # Moving right
+        if (keys[pygame.K_d] or keys[pygame.K_RIGHT]) and playerVelocity < 0:
+            playerVelocity = playerSpeed * dt
+        elif (keys[pygame.K_d] or keys[pygame.K_RIGHT]):
+            playerVelocity += playerSpeed * dt
 
-    # Left and Right
-    if keys[pygame.K_a] and keys[pygame.K_d]:
-        playerVelocity = 0
+        # Left and Right
+        if ((keys[pygame.K_a] or keys[pygame.K_LEFT]) and (keys[pygame.K_d] or keys[pygame.K_RIGHT])):
+            playerVelocity = 0
 
-    # Hard stop
-    if not (keys[pygame.K_a] or keys[pygame.K_d]):
-        playerVelocity = 0
+        # Hard stop
+        if not (keys[pygame.K_a] or keys[pygame.K_d]
+                or keys[pygame.K_LEFT] or keys[pygame.K_RIGHT]):
+            playerVelocity = 0
 
-    player = player.move(playerVelocity, 0)
-    player.x = min(player.x, windowSize[0] - player.width)
-    player.x = max(player.x, 0)
+        player = player.move(playerVelocity, 0)
+        player.x = min(player.x, windowSize[0] - player.width)
+        player.x = max(player.x, 0)
 
-    # Ball movement
-    ballY += ballGravity * dt
-    ballX += ballHoriSpeed * dt
+        # Ball movement
+        ballY += ballGravity * dt
+        ballX += ballHoriSpeed * dt
 
-    # Ball bounces off walls & ceiling
-    if (ballX > windowSize[0] - ballRadius):
-        ballX = windowSize[0] - ballRadius
-        ballHoriSpeed *= -1
-    elif (ballX < 0 + ballRadius):
-        ballX = 0 + ballRadius
-        ballHoriSpeed *= -1
-    if (ballY <= 0 + ballRadius):
-        ballY = 0 + ballRadius
-        ballGravity *= -1
+        # Ball bounces off walls & ceiling
+        if (ballX > windowSize[0] - ballRadius):
+            ballX = windowSize[0] - ballRadius
+            ballHoriSpeed *= -1
+        elif (ballX < 0 + ballRadius):
+            ballX = 0 + ballRadius
+            ballHoriSpeed *= -1
+        if (ballY <= 0 + ballRadius):
+            ballY = 0 + ballRadius
+            ballGravity *= -1
 
-
-    pygame.Rect.colliderect(pygame.draw.rect(screen, "green", player, 40),
-                            pygame.draw.circle(screen, "white", pygame.Vector2(ballX, ballY), ballRadius))
-    
+        
     drawnPlayer = pygame.draw.rect(screen, "green", player, 40) 
     drawnBall = pygame.draw.circle(screen, "white", pygame.Vector2(ballX, ballY), ballRadius)
 
@@ -109,25 +113,28 @@ while running:
     x=0
     for brick in bricks:
         drawnBricks.append(pygame.draw.rect(screen, brickColors[x % 10], brick, 40))
-        if (pygame.Rect.colliderect(drawnBricks[x], drawnBall)):
+        if (pygame.Rect.colliderect(drawnBricks[x], drawnBall)
+            and brickCollideTimeout == 0):
             ballGravity *= -1
-            # TODO DELETE BRICK
+            bricks.remove(brick)
         x+=1
 
+    if (brickCollideTimeout > 0):
+        brickCollideTimeout -= 1
 
 
     if (pygame.Rect.colliderect(drawnPlayer, drawnBall) # do ball and player collide
         and ballY <= playerHeight + 5 # ignore collisions with the side of the rectangle with some tolerance
-        and collideTimeout == 0): # add timeout to prevent spamming direction changes
+        and playerCollideTimeout == 0): # add timeout to prevent spamming direction changes
         horiDir = 1
         if drawnBall.x <= (drawnPlayer.x + (drawnPlayer.width/2)):
             horiDir = -1
         ballHoriSpeed = horiDir * abs((drawnBall.x - (drawnPlayer.x + (drawnPlayer.width/2)))/(drawnPlayer.width)) * ballMaxHoriSpeed
         
         ballGravity *= -1
-        collideTimeout = 5
-    elif collideTimeout > 0:
-        collideTimeout -= 1
+        playerCollideTimeout = 5
+    elif playerCollideTimeout > 0:
+        playerCollideTimeout -= 1
 
     # flip() the display to put your work on screen
     pygame.display.flip()
