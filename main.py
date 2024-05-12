@@ -28,10 +28,9 @@ ballRight = True
 playerSpeed = 25
 ballGravity = 300
 ballMaxHoriSpeed = 500
-ballHoriSpeed = random.randint(50,250)
-ballMovingRight = False
-if random.randint(0,1) == 0:
-    ballMovingRight = True
+ballHoriSpeed = random.randint(20,200)
+if ballHoriSpeed % 2 == 0:
+    ballHoriSpeed *= -1
 ballRadius = 10
 
 windowSize = pygame.display.get_window_size()
@@ -104,6 +103,16 @@ while running:
         if (ballY <= 0 + ballRadius):
             ballY = 0 + ballRadius
             ballGravity *= -1
+    elif pygame.font:
+        # Put Text On The Background, Centered
+        font = pygame.font.Font(None, 64)
+        text = font.render("Welcome to BrickBreaker!", True, "red")
+        textpos = text.get_rect(centerx=screen.get_width() / 2, y=200)
+        screen.blit(text, textpos)
+        textLine2 = font.render("Press 'tab' to start", True, "red")
+        textpos = text.get_rect(centerx=screen.get_width() / 2, y=250)
+        screen.blit(textLine2, textpos)
+
 
         
     drawnPlayer = pygame.draw.rect(screen, "green", player, 40) 
