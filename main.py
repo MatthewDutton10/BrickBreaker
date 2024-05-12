@@ -57,6 +57,8 @@ BRICK_VAL = 50
 MULTIPLIER_VAL = 20
 
 lives = 3
+paused = False
+pauseTimer = 0
 
 if pygame.font:
     font = pygame.font.Font(None, 64)
@@ -76,10 +78,16 @@ while running:
     if (keys[pygame.K_ESCAPE] and not inGame):
         running = False
         continue
-    elif keys[pygame.K_ESCAPE]:
-        # TODO pause
+    elif ((keys[pygame.K_LSHIFT] or keys[pygame.K_RSHIFT])
+        and inGame
+        and pauseTimer == 0):
+        paused = not paused
+        pauseTimer = 20
+        continue
+    elif pauseTimer > 0:
+        pauseTimer -= 1
 
-    if (keys[pygame.K_TAB] or inGame):
+    if (keys[pygame.K_TAB] or (inGame and not paused)):
         inGame = True
 
         # new game after a game over
@@ -153,7 +161,7 @@ while running:
         quitTextPos = quitText.get_rect(centerx=screen.get_width() / 2, y=300)
         screen.blit(quitText, quitTextPos)
 
-    elif pygame.font:
+    elif pygame.font and not paused:
         if lives == 3:
             textLine1 = font.render("Welcome to BrickBreaker!", True, "red")
             textLine2 = font.render("Press 'tab' to start", True, "red")
@@ -161,13 +169,21 @@ while running:
             textLine1 = font.render("You died :(", True, "red")
             textLine2 = font.render("Press 'tab' to try again", True, "red")
         textLine3 = font.render("Press 'Esc' to quit", True, "red")
+        shiftText = font.render("Press 'Shift' to pause", True, "red")
 
-        textpos2 = textLine1.get_rect(centerx=screen.get_width() / 2, y=200)
+        textpos2 = textLine1.get_rect(centerx=screen.get_width() / 2, y=150)
         screen.blit(textLine1, textpos2)
-        textpos3 = textLine2.get_rect(centerx=screen.get_width() / 2, y=250)
+        textpos3 = textLine2.get_rect(centerx=screen.get_width() / 2, y=200)
         screen.blit(textLine2, textpos3)
-        textpos4 = textLine3.get_rect(centerx=screen.get_width() / 2, y=300)
+        textpos4 = textLine3.get_rect(centerx=screen.get_width() / 2, y=250)
         screen.blit(textLine3, textpos4)
+        shiftPos = shiftText.get_rect(centerx=screen.get_width() / 2, y=300)
+        screen.blit(shiftText, shiftPos)
+    elif pygame.font and paused:
+        pausedText = font.render("Paused", True, "red")
+        pausedPos = pausedText.get_rect(centerx=screen.get_width() / 2, y=200)
+        screen.blit(pausedText, pausedPos)
+
 
 
         
@@ -211,6 +227,7 @@ while running:
         comboText = ""
     elif playerCollideTimeout > 0:
         playerCollideTimeout -= 1
+        continue
 
     
     scoreText = font.render("Score: " + str(score) + " " + comboText, True, "red")
