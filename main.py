@@ -48,6 +48,18 @@ for i in range(0,10):
 brickColors = {0:"orange", 1:"pink", 2:"red", 3:"green", 4:"purple", 5:"brown", 6:"yellow", 7:"orange", 8:"pink", 9:"red", 10:"green"}
 
 inGame = False
+touchedPlayer = False
+
+score = 0
+scoreMultiplier = 0
+comboText = ""
+BRICK_VAL = 50
+MULTIPLIER_VAL = 20
+
+lives = 3
+
+if pygame.font:
+    font = pygame.font.Font(None, 64)
 
 while running:
     # poll for events
@@ -63,6 +75,15 @@ while running:
 
     if (keys[pygame.K_TAB] or inGame):
         inGame = True
+
+        # new game after a game over
+        if (lives == 0):
+            score = 0
+            lives = 3
+            bricks = []
+            for i in range(0,10):
+                for j in range(0,5):
+                    bricks.append(Rect(pygame.Vector2((screen.get_width() / 10) * i, 20 * j), ((screen.get_width() / 10), 25)))
     
         # Moving Left
         if (keys[pygame.K_a] or keys[pygame.K_LEFT]) and playerVelocity > 0:
@@ -103,13 +124,36 @@ while running:
         if (ballY <= 0 + ballRadius):
             ballY = 0 + ballRadius
             ballGravity *= -1
-    elif pygame.font:
-        # Put Text On The Background, Centered
-        font = pygame.font.Font(None, 64)
-        text = font.render("Welcome to BrickBreaker!", True, "red")
+        elif (ballY >= windowSize[1] - ballRadius):
+            lives-=1
+            inGame=False
+            player.x = (screen.get_width() / 2) - player.width / 2
+            ballX = screen.get_width() / 2
+            ballY = screen.get_height() * 0.5
+            comboText = ""
+            touchedPlayer = False
+            scoreMultiplier = 0
+    elif lives == 0:
+        text = font.render("Game over :(", True, "red")
         textpos = text.get_rect(centerx=screen.get_width() / 2, y=200)
         screen.blit(text, textpos)
-        textLine2 = font.render("Press 'tab' to start", True, "red")
+        finalScoreText = font.render("Final Score: " + str(score), True, "red")
+        finalScorePos = text.get_rect(centerx=screen.get_width() / 2, y=250)
+        screen.blit(finalScoreText, finalScorePos)
+        newGameText = font.render("Press 'tab' to start a new game", True, "red")
+        newGamePos = text.get_rect(centerx=screen.get_width() / 2, y=300)
+        screen.blit(newGameText, newGamePos)
+
+    elif pygame.font:
+        if lives == 3:
+            text = font.render("Welcome to BrickBreaker!", True, "red")
+            textLine2 = font.render("Press 'tab' to start", True, "red")
+        else:
+            text = font.render("You died :(", True, "red")
+            textLine2 = font.render("Press 'tab' to try again", True, "red")
+        textpos = text.get_rect(centerx=screen.get_width() / 2, y=200)
+        screen.blit(text, textpos)
+        
         textpos = text.get_rect(centerx=screen.get_width() / 2, y=250)
         screen.blit(textLine2, textpos)
 
@@ -126,6 +170,15 @@ while running:
             and brickCollideTimeout == 0):
             ballGravity *= -1
             bricks.remove(brick)
+            if (touchedPlayer):
+                score+=BRICK_VAL
+                scoreMultiplier+=1
+                comboText = ""
+            else:
+                score += BRICK_VAL + (scoreMultiplier * MULTIPLIER_VAL)
+                scoreMultiplier+=1
+                comboText = "+ Combo x" + str(scoreMultiplier)
+            touchedPlayer = False
         x+=1
 
     if (brickCollideTimeout > 0):
@@ -142,8 +195,19 @@ while running:
         
         ballGravity *= -1
         playerCollideTimeout = 5
+        touchedPlayer = True
+        comboText = ""
     elif playerCollideTimeout > 0:
         playerCollideTimeout -= 1
+
+    
+    scoreText = font.render("Score: " + str(score), True, "red") # + " " + comboText
+    scoreTextpos = text.get_rect(centerx=screen.get_width() / 4, y=screen.get_height() - 50)
+    screen.blit(scoreText, scoreTextpos)
+
+    livesText = font.render("Lives: " + str(lives), True, "red")
+    livesTextPos = text.get_rect(centerx=3 * screen.get_width() / 4, y=screen.get_height() - 50)
+    screen.blit(livesText, livesTextPos)
 
     # flip() the display to put your work on screen
     pygame.display.flip()
