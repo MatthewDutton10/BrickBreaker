@@ -43,9 +43,14 @@ bricks = []
 for i in range(0,10):
     for j in range(0,5):
         bricks.append(Rect(pygame.Vector2((screen.get_width() / 10) * i, 20 * j), ((screen.get_width() / 10), 25)))
+        
 
-
-brickColors = {0:"orange", 1:"pink", 2:"red", 3:"green", 4:"purple", 5:"brown", 6:"yellow", 7:"orange", 8:"pink", 9:"red", 10:"green"}
+id=0
+brickID = {}
+colors = ["orange", "pink", "red", "green", "purple", "brown", "yellow", "orange", "pink", "red", "green"]
+for brick in bricks:
+    brickID[id] = brick
+    id+=1
 
 inGame = False
 touchedPlayer = False
@@ -55,8 +60,9 @@ scoreMultiplier = 0
 comboText = ""
 BRICK_VAL = 50
 MULTIPLIER_VAL = 20
+NUM_LIVES = 3
 
-lives = 3
+lives = NUM_LIVES
 paused = False
 pauseTimer = 0
 
@@ -93,7 +99,7 @@ while running:
         # new game after a game over
         if (lives == 0):
             score = 0
-            lives = 3
+            lives = NUM_LIVES
             bricks = []
             for i in range(0,10):
                 for j in range(0,5):
@@ -162,7 +168,7 @@ while running:
         screen.blit(quitText, quitTextPos)
 
     elif pygame.font and not paused:
-        if lives == 3:
+        if lives == NUM_LIVES:
             textLine1 = font.render("Welcome to BrickBreaker!", True, "red")
             textLine2 = font.render("Press 'tab' to start", True, "red")
         else:
@@ -191,13 +197,15 @@ while running:
     drawnBall = pygame.draw.circle(screen, "white", pygame.Vector2(ballX, ballY), ballRadius)
 
     drawnBricks = []
+    removeBrickIDs = []
     x=0
     for brick in bricks:
-        drawnBricks.append(pygame.draw.rect(screen, brickColors[x % 10], brick, 40))
+        currentBrickID = list(brickID.keys())[list(brickID.values()).index(brick)]
+        drawnBricks.append(pygame.draw.rect(screen, colors[currentBrickID % len(colors)], brick, 40))
         if (pygame.Rect.colliderect(drawnBricks[x], drawnBall)
             and brickCollideTimeout == 0):
             ballGravity *= -1
-            bricks.remove(brick)
+            removeBrickIDs.insert(0, currentBrickID)
             if (touchedPlayer):
                 score+=BRICK_VAL
                 scoreMultiplier+=1
@@ -207,11 +215,15 @@ while running:
                 scoreMultiplier+=1
                 comboText = "+ Combo x" + str(scoreMultiplier)
             touchedPlayer = False
+            brickCollideTimeout = 5
         x+=1
+
+    # remove collided bricks
+    for removeID in removeBrickIDs:
+        bricks.remove(brickID[removeID])
 
     if (brickCollideTimeout > 0):
         brickCollideTimeout -= 1
-
 
     if (pygame.Rect.colliderect(drawnPlayer, drawnBall) # do ball and player collide
         and ballY <= playerHeight + 5 # ignore collisions with the side of the rectangle with some tolerance
@@ -224,6 +236,7 @@ while running:
         ballGravity *= -1
         playerCollideTimeout = 5
         touchedPlayer = True
+        scoreMultiplier = 0
         comboText = ""
     elif playerCollideTimeout > 0:
         playerCollideTimeout -= 1
