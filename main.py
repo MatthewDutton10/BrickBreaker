@@ -4,6 +4,12 @@ from pygame import Rect
 
 from helper import *
 
+# TODO 
+# brick sizing/spacing
+# changes between levels
+# high score
+
+
 # DOCS: https://www.pygame.org/docs/
 
 # pygame setup
@@ -28,7 +34,7 @@ ballDown = True
 ballRight = True
 
 playerSpeed = 25
-ballGravity = 300
+ballGravity = 350 # 300
 ballMaxHoriSpeed = 500
 ballHoriSpeed = random.randint(20,200)
 if ballHoriSpeed % 2 == 0:
@@ -98,7 +104,8 @@ while running:
     elif pauseTimer > 0:
         pauseTimer -= 1
 
-    if (keys[pygame.K_TAB] or (inGame and not paused)):
+    if ((keys[pygame.K_TAB] or inGame)
+         and not paused):
         inGame = True
         levelComplete = False
 
@@ -235,6 +242,7 @@ while running:
         drawnBricks = []
         bricks = initializeBricks(screen)
         level+=1
+        # ballGravity += (ballGravity*0.05)
         scoreMultiplier=0
         random.shuffle(colors)
         player.x = resetPlayer(player, screen)
@@ -266,11 +274,15 @@ while running:
         playerCollideTimeout -= 1
     
     scoreText = font.render("Score: " + str(score) + " " + comboText, True, "red")
-    scoreTextpos = scoreText.get_rect(centerx=screen.get_width() / 4, y=screen.get_height() - 50)
+    scoreTextpos = scoreText.get_rect(centerx=screen.get_width() / 5, y=screen.get_height() - 50)
     screen.blit(scoreText, scoreTextpos)
 
+    levelText = font.render("Level: " + str(level), True, "red")
+    levelTextPos = levelText.get_rect(centerx=screen.get_width() / 2, y=screen.get_height() - 50)
+    screen.blit(levelText, levelTextPos)
+
     livesText = font.render("Lives: " + str(lives), True, "red")
-    livesTextPos = livesText.get_rect(centerx=3 * screen.get_width() / 4, y=screen.get_height() - 50)
+    livesTextPos = livesText.get_rect(centerx=4 * screen.get_width() / 5, y=screen.get_height() - 50)
     screen.blit(livesText, livesTextPos)
 
     # flip() the display to put your work on screen
