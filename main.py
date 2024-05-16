@@ -5,9 +5,6 @@ from pygame import Rect
 
 from helper import *
 
-# TODO  high score
-
-
 # DOCS: https://www.pygame.org/docs/
 
 # pygame setup
@@ -37,7 +34,7 @@ INITIAL_BALL_VERT_SPEED = 350
 playerSpeed = 25
 ballVerticalSpeed = INITIAL_BALL_VERT_SPEED
 ballHoriSpeed = 0
-ballHoriSpeed = resetBallHoriSpeed(ballHoriSpeed)
+ballHoriSpeed = resetBallHoriSpeed()
 ballRadius = 10
 
 windowSize = pg.display.get_window_size()
@@ -63,7 +60,6 @@ score = 0
 scoreMultiplier = 0
 comboText = ""
 BRICK_VAL = 50
-MULTIPLIER_VAL = 20
 NUM_LIVES = 3
 
 lives = NUM_LIVES
@@ -77,6 +73,10 @@ levelComplete = False
 level = 1
 
 combo = 0
+multiplierVal = 20
+
+
+highScore = 0
 
 while running:
     # poll for events
@@ -110,6 +110,7 @@ while running:
         # new game after a game over
         if (lives == 0):
             ballVerticalSpeed = INITIAL_BALL_VERT_SPEED
+            ballHoriSpeed = resetBallHoriSpeed()
             level = 1
             score = 0
             lives = NUM_LIVES
@@ -159,14 +160,18 @@ while running:
             lives-=1
             inGame=False
             player.x = resetPlayer(player, screen)
-            ballHoriSpeed = resetBallHoriSpeed(ballHoriSpeed)
+            ballHoriSpeed = resetBallHoriSpeed()
             ballX, ballY = resetBall(screen)
             comboText = ""
             touchedPlayer = False
             scoreMultiplier = 0
             combo = 0
     elif lives == 0:
+
         gameOverText = font.render("Game over :(", True, "red")
+        if (score >= highScore):
+            highScore = score
+            gameOverText = font.render("Game over, new high score!!", True, "red")
         textpos = gameOverText.get_rect(centerx=HORIZONTAL_CENTER, y=FIRST_TEXT_ROW_POS)
         screen.blit(gameOverText, textpos)
         finalScoreText = font.render("Final Score: " + str(score), True, "red")
@@ -221,7 +226,7 @@ while running:
             and brickCollideTimeout == 0):
             ballVerticalSpeed *= -1
             removeBrickIDs.insert(0, currentBrickID)
-            combo += scoreMultiplier*MULTIPLIER_VAL
+            combo += scoreMultiplier*multiplierVal
             scoreMultiplier+=1
             score+=BRICK_VAL
             brickCollideTimeout = 5
@@ -243,6 +248,8 @@ while running:
         drawnBricks = []
         bricks = initializeBricks(screen)
         level+=1
+        multiplierVal *= 2
+        multiplierVal = min(multiplierVal, 5000)
         ballVerticalSpeed = abs(ballVerticalSpeed)
         ballVerticalSpeed += (ballVerticalSpeed*0.1)
         scoreMultiplier=0
@@ -275,16 +282,20 @@ while running:
     elif playerCollideTimeout > 0:
         playerCollideTimeout -= 1
     
-    scoreText = font.render("Score: " + str(score) + " " + comboText, True, "red")
-    scoreTextpos = scoreText.get_rect(centerx=screen.get_width() / 5, y=screen.get_height() - 50)
+    scoreText = font.render("Score: " + str(score), True, "red") # + " " + comboText
+    scoreTextpos = scoreText.get_rect(centerx=0 + (3*screen.get_width() / 20), y=screen.get_height() - 50)
     screen.blit(scoreText, scoreTextpos)
 
-    levelText = font.render("Level: " + str(level), True, "red")
-    levelTextPos = levelText.get_rect(centerx=HORIZONTAL_CENTER, y=screen.get_height() - 50)
-    screen.blit(levelText, levelTextPos)
+    comboTextFont = font.render(comboText, True, "green")
+    comboTextPos = comboTextFont.get_rect(centerx=0 + (3*screen.get_width() / 20), y=screen.get_height() - (50*2))
+    screen.blit(comboTextFont, comboTextPos)
 
-    livesText = font.render("Lives: " + str(lives), True, "red")
-    livesTextPos = livesText.get_rect(centerx=4 * screen.get_width() / 5, y=screen.get_height() - 50)
+    highScoreText = font.render("High Score: " + str(highScore) , True, "red")
+    highScoreTextpos = highScoreText.get_rect(centerx=(screen.get_width() / 4) + (screen.get_width() / 5), y=screen.get_height() - 50)
+    screen.blit(highScoreText, highScoreTextpos)
+
+    livesText = font.render("Level: " + str(level) + " ~ Lives: " + str(lives), True, "red")
+    livesTextPos = livesText.get_rect(centerx=(3 * screen.get_width() / 4) + (screen.get_width() / 20), y=screen.get_height() - 50)
     screen.blit(livesText, livesTextPos)
 
     # flip() the display to put your work on screen

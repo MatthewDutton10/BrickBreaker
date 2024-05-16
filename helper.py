@@ -23,7 +23,7 @@ def resetPlayer(player, screen):
 def getBrickID(brick, brickID):
      return list(brickID.keys())[list(brickID.values()).index(brick)]
 
-def resetBallHoriSpeed(ballHoriSpeed):
+def resetBallHoriSpeed():
      ballHoriSpeed = random.randint(0,125)
      if ballHoriSpeed % 2 == 0:
           ballHoriSpeed *= -1
