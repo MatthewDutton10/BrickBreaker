@@ -5,9 +5,7 @@ from pygame import Rect
 
 from helper import *
 
-# TODO 
-# changes between levels
-# high score
+# TODO  high score
 
 
 # DOCS: https://www.pygame.org/docs/
@@ -34,11 +32,12 @@ INITIAL_BALL_Y = screen.get_height() / 2 + TEXT_ROW_HEIGHT
 ballX = HORIZONTAL_CENTER
 ballY = INITIAL_BALL_Y
 
+INITIAL_BALL_VERT_SPEED = 350
+
 playerSpeed = 25
-ballVerticalSpeed = 350 # 300
-ballHoriSpeed = random.randint(20,175)
-if ballHoriSpeed % 2 == 0:
-    ballHoriSpeed *= -1
+ballVerticalSpeed = INITIAL_BALL_VERT_SPEED
+ballHoriSpeed = 0
+ballHoriSpeed = resetBallHoriSpeed(ballHoriSpeed)
 ballRadius = 10
 
 windowSize = pg.display.get_window_size()
@@ -110,6 +109,8 @@ while running:
 
         # new game after a game over
         if (lives == 0):
+            ballVerticalSpeed = INITIAL_BALL_VERT_SPEED
+            level = 1
             score = 0
             lives = NUM_LIVES
             bricks = initializeBricks(screen)
@@ -158,6 +159,7 @@ while running:
             lives-=1
             inGame=False
             player.x = resetPlayer(player, screen)
+            ballHoriSpeed = resetBallHoriSpeed(ballHoriSpeed)
             ballX, ballY = resetBall(screen)
             comboText = ""
             touchedPlayer = False
@@ -242,7 +244,7 @@ while running:
         bricks = initializeBricks(screen)
         level+=1
         ballVerticalSpeed = abs(ballVerticalSpeed)
-        # ballGravity += (ballGravity*0.05)
+        ballVerticalSpeed += (ballVerticalSpeed*0.1)
         scoreMultiplier=0
         random.shuffle(colors)
         player.x = resetPlayer(player, screen)
