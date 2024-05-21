@@ -90,7 +90,7 @@ while running:
 
     keys = pg.key.get_pressed()
 
-    if (keys[pg.K_ESCAPE] and not inGame):
+    if (keys[pg.K_ESCAPE] and (not inGame or paused)):
         running = False
         continue
     elif ((keys[pg.K_LSHIFT] or keys[pg.K_RSHIFT])
@@ -221,10 +221,22 @@ while running:
     x=0
     for brick in bricks:
         currentBrickID = getBrickID(brick, brickID)
-        drawnBricks.append(pg.draw.rect(screen, colors[currentBrickID % len(colors)], brick, 40))
-        if (pg.Rect.colliderect(drawnBricks[x], drawnBall)
-            and brickCollideTimeout == 0):
-            ballVerticalSpeed *= -1
+        brick_rect = pg.Rect(brick[0], brick[1], screen.get_width() / NUM_COLUMNS, BRICK_HEIGHT)
+        drawnBricks.append(pg.draw.rect(screen, colors[currentBrickID % len(colors)], brick_rect))
+
+        # Create a rectangle around the ball (bounding box of the circle)
+        ball_rect = pg.Rect(ballX - ballRadius, ballY - ballRadius, 2 * ballRadius, 2 * ballRadius)
+
+        if brick_rect.colliderect(ball_rect) and brickCollideTimeout == 0:
+            # Determine the side of collision
+            dx = min(abs(ball_rect.right - brick_rect.left), abs(ball_rect.left - brick_rect.right))
+            dy = min(abs(ball_rect.bottom - brick_rect.top), abs(ball_rect.top - brick_rect.bottom))
+
+            if dx < dy:
+                ballHoriSpeed *= -1
+            else:
+                ballVerticalSpeed *= -1
+            
             removeBrickIDs.insert(0, currentBrickID)
             combo += scoreMultiplier*multiplierVal
             scoreMultiplier+=1
