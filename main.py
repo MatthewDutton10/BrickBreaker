@@ -177,6 +177,7 @@ while running:
             touchedPlayer = False
             scoreMultiplier = 0
             combo = 0
+            playerVelocity = 0
 
     # game over
     elif lives == 0:
