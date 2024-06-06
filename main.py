@@ -124,6 +124,7 @@ while running:
             ballHoriVelocity = resetBallHoriSpeed()
             level = 1
             score = 0
+            scoreMultiplier = 0
             lives = NUM_LIVES
             bricks = initializeBricks(screen)
             random.shuffle(colors)
